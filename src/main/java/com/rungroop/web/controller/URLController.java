@@ -11,8 +11,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
 import java.net.URLDecoder;
@@ -27,6 +29,8 @@ public class URLController {
     private final URLRepository urlRepository;
     Logger logger = LoggerFactory.getLogger(URLController.class);
 
+    private final static String RESULT_MESSAGE = "Your shortened string is: http://localhost:8080/";
+
     public URLController(URLService urlService, URLRepository urlRepository) {
         this.urlService = urlService;
         this.urlRepository = urlRepository;
@@ -34,48 +38,43 @@ public class URLController {
 
     private String encodeUrl(final String url) {
         String base64 = Base64.getEncoder().encodeToString(url.getBytes());
-        return base64.substring(0, 16);
-    }
-
-    private String decodeUrl(final String encodedUrl) {
-        return URLDecoder.decode(encodedUrl, StandardCharsets.UTF_8);
+        return base64.substring(8, Math.min(base64.length() - 1, 24));
     }
 
     @PostMapping("/shorten")
-    public @ResponseBody ResponseEntity<?> shortenURL(@RequestParam final String urlToShorten) {
+    public String shortenURL(@RequestParam final String urlToShorten,
+                             Model model) {
         UrlValidator validator = new UrlValidator();
         if (!validator.isValid(urlToShorten)) {
             logger.error("Invalid url provided");
 
-            AppError error = new AppError(HttpStatus.BAD_REQUEST.value(), String.format("Invalid url: %s", urlToShorten));
-            return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+            return "ErrorPage";
         }
 
-        String shortened_url = encodeUrl(urlToShorten);
-        if (urlRepository.existsByShortenedUrl(shortened_url)) {
-            return new ResponseEntity<>(shortened_url, HttpStatus.OK);
+        String shortenedUrl = encodeUrl(urlToShorten);
+        if (urlRepository.existsByShortenedUrl(shortenedUrl)) {
+            model.addAttribute("shortenedUrl", RESULT_MESSAGE + shortenedUrl);
+            return "IndexPage";
         }
 
-        URLEntity entity = urlService.save(urlToShorten, shortened_url);
-        return new ResponseEntity<>(entity, HttpStatus.OK);
+        URLEntity entity = urlService.save(urlToShorten, shortenedUrl);
+        model.addAttribute("shortenedUrl", RESULT_MESSAGE + entity.getShortenedUrl());
+        return "IndexPage";
     }
 
     @GetMapping("/{shortenedUrl}")
-    public void redirectToOriginalUrl(@PathVariable final String shortenedUrl, HttpServletResponse response) {
+    public String redirectToOriginalUrl(@PathVariable final String shortenedUrl,
+                                      RedirectAttributes attributes) {
         Optional<URLEntity> fullUrl = urlRepository.findURLEntityByShortenedUrl(shortenedUrl);
         if (fullUrl.isPresent()) {
             String url = fullUrl.get().getUrl();
             logger.info(String.format("Redirecting to %s", url));
-            try {
-                response.sendRedirect(url);
-            } catch (IOException e) {
-                logger.error("Couldn't redirect to full url. Shortened version was - " + shortenedUrl);
-                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                        "Could not redirect to the full url", e);
-            }
+            return "redirect:/" + url;
         } else {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                    "Url not found. Shortened version was - " + shortenedUrl);
+            logger.error("There are no shortened url in database: " + shortenedUrl);
+            attributes.addFlashAttribute("errorMessage",
+                    "There are no shortened url in database: " + shortenedUrl);
+            return "redirect:/error_page";
         }
     }
 
