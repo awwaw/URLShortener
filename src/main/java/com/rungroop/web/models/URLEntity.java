@@ -1,5 +1,6 @@
 package com.rungroop.web.models;
 
+import io.hypersistence.utils.hibernate.id.Tsid;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,7 +18,7 @@ import java.time.LocalDateTime;
 @Table(name = "url")
 public class URLEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Tsid
     private Long id;
 
     @Column(name = "original_url")
@@ -25,6 +26,10 @@ public class URLEntity {
 
     @Column(name = "shortened_url")
     private String shortenedUrl;
+
+    public URLEntity(final String url) {
+        this.url = url;
+    }
 }
 
 

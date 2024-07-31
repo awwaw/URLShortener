@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta name="description" content="" />
+    <meta name="author" content="" />
+    <title>URLShortener</title>
+    <!-- Core theme CSS (includes Bootstrap)-->
+    <link th:href="@{css/styles.css}" rel="stylesheet"/>
+</head>
+<body>
+
+<div th:if="${not #strings.isEmpty(shortenedUrl)}" class="result">
+    <h2 id="result-text" th:text="${shortenedUrl}"></h2>
+    <button class="submit" onclick="copyText()">Copy URL to clipboard</button>
+    <button id="redirect-main-page" class="return-home">Return to main page</button>
+
+    <script type="text/javascript">
+        document.getElementById("redirect-main-page").onclick = () => {
+            location.href = "/";
+        }
+    </script>
+</div>
+
+<script>
+    function getText(obj) {
+        return obj.textContent ? obj.textContent : obj.innerText;
+    }
+
+    function copyText() {
+        const text = getText(document.getElementById("result-text"));
+        const url = text.substring(26);
+        navigator.clipboard.writeText(url);
+    }
+</script>
+
+</body>
+</html>

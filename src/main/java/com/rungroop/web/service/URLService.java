@@ -19,15 +19,24 @@ public class URLService {
         return urlRepository.findAll();
     }
 
-    public URLEntity save(final String url, final String shortenedUrl) {
-        URLEntity entity = URLEntity.builder()
-                .url(url)
-                .shortenedUrl(shortenedUrl)
-                .build();
-        if (urlRepository.existsByShortenedUrl(shortenedUrl)) {
-            return entity;
-        }
+//    public URLEntity save(final String url, final String shortenedUrl) {
+//        URLEntity entity = URLEntity.builder()
+//                .url(url)
+//                .shortenedUrl(shortenedUrl)
+//                .build();
+//        if (urlRepository.existsByShortenedUrl(shortenedUrl)) {
+//            return entity;
+//        }
+//        urlRepository.save(entity);
+//        return entity;
+//    }
+    public URLEntity save(final String url) {
+        URLEntity entity = new URLEntity(url);
         urlRepository.save(entity);
         return entity;
+    }
+
+    public void updateShortenedUrl(long id, final String shortenedUrl) {
+        urlRepository.setShortenedUrlById(id, shortenedUrl);
     }
 }
