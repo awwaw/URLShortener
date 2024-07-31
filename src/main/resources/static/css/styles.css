@@ -136,6 +136,7 @@ button > .submit:active {
 }
 
 .result {
+  padding: 2rem;
   position: relative;
   border-radius: 12px;
   background-color: #00a7ff;

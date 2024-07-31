@@ -20,7 +20,7 @@ public class URLController {
     private final URLRepository urlRepository;
     Logger logger = LoggerFactory.getLogger(URLController.class);
 
-    private final static String RESULT_MESSAGE = "Your shortened URL is: http://localhost:8080/sl";
+    private final static String RESULT_MESSAGE = "Your shortened URL is: http://localhost:8080/sl/";
 
     public URLController(URLService urlService, URLRepository urlRepository) {
         this.urlService = urlService;
