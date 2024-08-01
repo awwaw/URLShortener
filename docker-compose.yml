@@ -1,22 +1,36 @@
-version: '1'
+version: "3.8"
 
 services:
-  app:
-    image: 'docker-spring-boot-postgres:latest'
-    build:
-      context: .
-    container_name: app
-    depends_on:
-      - db
-    environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/compose-postgres
-      - SPRING_DATASOURCE_USERNAME=postgres
-      - SPRING_DATASOURCE_PASSWORD=63910
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
-
-  db:
-    image: 'postgres:16.3.2'
-    container_name: db
+  postgresql-db:
+    image: postgres
+    container_name: postgresql-db
+    restart: always
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=63910
+      - POSTGRES_DB=rungroop
+#    ports:
+#      - '5432:5432'
+    expose:
+      - 5432:5432
+
+  app:
+    container_name: url-shortener-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    ports:
+      - '8080:8080'
+
+    environment:
+      SPRING_APPLICATION_JSON: '{
+        "spring.datasource.url"  : "jdbc:postgresql://host.docker.internal:5432/rungroop",
+        "spring.datasource.username" : "postgres",
+        "spring.datasource.password" : "63910",
+        "spring.jpa.properties.hibernate.dialect" : "org.hibernate.dialect.PostgreSQLDialect",
+        "spring.jpa.hibernate.ddl-auto" : "update"
+      }'
+
+    depends_on:
+      - postgresql-db
